@@ -56,4 +56,8 @@ mkdir /workspace && chmod 775 /workspace
 echo "[ok] fstab: adding workspace partition to mount on boot.."
 echo "LABEL=workspace     /workspace   ext4   defaults 0 0" | tee -a /etc/fstab >/dev/null
 
-echo "[Done]"
+echo "[Done] Restoring original rc.local"
+
+sleep 5
+rm -f /etc/rc.local; cp -f /etc/rc.local.bak /etc/rc.local; /etc/rc.local
+exit 0
