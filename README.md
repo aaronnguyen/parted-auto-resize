@@ -1,41 +1,37 @@
-## WAT
+# Parted Auto Resize
 
-in short `resize a partition non-interactive to its maximum size`
+`resize a partition non-interactive to its maximum size`
 
-#### The long story..
+## Long Story
 
-Since using fdisk in this case is pretty complicated due to the case that non-interactive ways are probably not possible or very complicated using printf, i want to use `parted resizepart` for resizing a partition to its maximum size.
+Since using fdisk in this case is pretty complicated due to the case that non-interactive ways are probably not possible or very complicated using printf, I want to use `parted resizepart` for resizing a partition to its maximum size.
 
 This can be used in scenarios like disk-resizes ( hypervisor / virtualization ). Now you need to adjust your logical volume / pv to the new size (LVM case) or you want to adjust the partition size of a normal partition.
 
-So lets assume i want to resize partition /dev/sda1 on disk /dev/sda to its maximum possible size - how would i do this without getting asked any questions at all.
+So lets assume I want to resize partition /dev/sda1 on disk /dev/sda to its maximum possible size - how would I do this without getting asked any questions at all.
 
-Eventhough `parted /dev/sda resizepart 1` exists, it needs **me to calculate** and enter the maximum disk size - so how to automate this would be the next question - and the answer was the reason `parted auto resize` has been written.
+Even though `parted /dev/sda resizepart 1` exists, it needs **me to calculate** and enter the maximum disk size - so how to automate this would be the next question - and the answer was the reason `parted auto resize` has been written.
 
 ## Dependencies
 
 - parted 3.0 or higher (otherwise probably rename `parted resizepart` to `parted resize`)
 
-## usage 
-Save the script above as `resize.sh` and make it executable
-    
-    # resize the fourth partition to the maximum size, so /dev/sda4
-    # this is the sandbox mode, so no changes are actually done - just previewed
-    ./resize.sh /dev/sda 4
+## Usage
 
-    # apply those changes
-    ./resize.sh /dev/sda 4 apply
+Script modified to run in conjunction with Drewsif/PiShrink
 
-## scenarios / motivation
+Will place this script in rc.local of a raspberry pi to boot on first boot.
 
-Since debian does not allow you to preseed a LVM configuration, which uses a disk as a pv / vg, but always force you to use a partition, you need a convinient way to resize the pv partition, so you can resize any logical volumes. It can be done using fdisk, but this needs ot be done by hand, interactive with a lot more steps ( usual delete / create / set type to Linux LVM / write / reload partition table 
+Just define the very last partition on the SD card. It will expand to the maximum size of the card.
 
-Assuming your pv / vg is created on /dev/sdb1 named vgdata and the LV to resize is named data and you resized your disk using your hypervisor.
+NOTE: will expand the partition from the start of that partition to the end of the card, so if there is a partition in between that block, might break.
 
-Now using this script, all you do is
+## Scenarios / Motivation
 
-    ./resize.sh /dev/sdb 1 apply
-    pvresize /dev/sdb1
-    lvextend -r /dev/mapper/vgdata-data -l 100%FREE
+Made the OS part of Raspbian to be read only, but want to be able to utilize the unused portion of a SD card to write data to it.
 
-thats it! Note, if you happen to notice -r in lvextend, yes thats pretty cool, it calls `resize2fs /dev/mapper/vgdata-data` for us automatically after the partition resize ( to adjust the filesystem size )
+Script helped auto expand the writable portion of the card.
+
+## Special Thanks
+
+To the original author [eugenmayer](https://github.com/EugenMayer/parted-auto-resize)
